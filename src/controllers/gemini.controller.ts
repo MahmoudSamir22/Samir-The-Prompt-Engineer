@@ -29,6 +29,24 @@ class GeminiController {
       next(error);
     }
   }
+
+  async imageGenerate(req: Request, res: Response, next: NextFunction) {
+    try {
+      const data = await geminiService.imageGenerate();
+      response(res, 200, data);
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  async imagen3(req: Request, res: Response, next: NextFunction) {
+    try {
+      const data = await geminiService.imagen3();
+      response(res, 200, data);
+    } catch (error) {
+      next(error);
+    }
+  }
 }
 
 const geminiController = new GeminiController();

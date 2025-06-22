@@ -6,5 +6,7 @@ const router = Router();
 router.get("/generate-content", geminiController.generateContent);
 router.get("/generate-zero-thinking", geminiController.generateZeroThinking);
 router.get("/streaming-response", geminiController.streamingResponse);
+router.get("/image-generate", geminiController.imageGenerate);
+router.get("/imagen-3", geminiController.imagen3);
 
 export default router;
