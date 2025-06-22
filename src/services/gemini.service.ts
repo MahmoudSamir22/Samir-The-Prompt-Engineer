@@ -3,6 +3,8 @@ import { Modality } from "@google/genai";
 import fs, { createWriteStream } from "fs";
 import { Readable } from "stream";
 import fetch from "node-fetch";
+import saveWaveFile from "../utils/saveWaveFile";
+import ApiError from "../utils/ApiError";
 
 class GeminiService {
   async generateContent() {
@@ -140,6 +142,33 @@ class GeminiService {
         nodeStream.pipe(writer);
       }
     }
+  }
+
+  async audioGenerate() {
+    const response = await geminiAi.models.generateContent({
+      model: "gemini-2.5-flash-preview-tts",
+      contents: [
+        { parts: [{ text: "Say cheerfully: Hello, It's Samir The Prompt Engineer!" }] },
+      ],
+      config: {
+        responseModalities: ["AUDIO"],
+        speechConfig: {
+          voiceConfig: {
+            prebuiltVoiceConfig: { voiceName: "Kore" },
+          },
+        },
+      },
+    });
+
+    const data =
+      response.candidates?.[0]?.content?.parts?.[0]?.inlineData?.data;
+    if (typeof data !== "string") {
+      throw new ApiError("Audio data is undefined or not a string.", 400);
+    }
+    const audioBuffer = Buffer.from(data, "base64");
+
+    const fileName = "out.wav";
+    await saveWaveFile(fileName, audioBuffer);
   }
 }
 

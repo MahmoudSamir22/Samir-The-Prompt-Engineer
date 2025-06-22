@@ -9,5 +9,6 @@ router.get("/streaming-response", geminiController.streamingResponse);
 router.get("/image-generate", geminiController.imageGenerate);
 router.get("/imagen-3", geminiController.imagen3);
 router.get("/video-generate", geminiController.videoGenerate);
+router.get("/audio-generate", geminiController.audioGenerate);
 
 export default router;

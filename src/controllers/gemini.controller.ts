@@ -56,6 +56,15 @@ class GeminiController {
       next(error);
     }
   }
+
+  async audioGenerate(req: Request, res: Response, next: NextFunction) {
+    try {
+      const data = await geminiService.audioGenerate();
+      response(res, 200, data);
+    } catch (error) {
+      next(error);
+    }
+  }
 }
 
 const geminiController = new GeminiController();
