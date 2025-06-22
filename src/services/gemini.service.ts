@@ -1,6 +1,8 @@
 import geminiAi from "../utils/GeminiAI";
 import { Modality } from "@google/genai";
-import fs from "fs";
+import fs, { createWriteStream } from "fs";
+import { Readable } from "stream";
+import fetch from "node-fetch";
 
 class GeminiService {
   async generateContent() {
@@ -71,35 +73,74 @@ class GeminiService {
         }
       }
     } else {
-      console.error("Response does not contain expected candidates or content parts.");
+      console.error(
+        "Response does not contain expected candidates or content parts."
+      );
     }
   }
 
   async imagen3() {
-  const response = await geminiAi.models.generateImages({
-    model: 'imagen-3.0-generate-002',
-    prompt: 'Robot holding a red skateboard',
-    config: {
-      numberOfImages: 4,
-    },
-  });
+    const response = await geminiAi.models.generateImages({
+      model: "imagen-3.0-generate-002",
+      prompt: "Robot holding a red skateboard",
+      config: {
+        numberOfImages: 4,
+      },
+    });
 
-  let idx = 1;
-  if (response.generatedImages && Array.isArray(response.generatedImages)) {
-    for (const generatedImage of response.generatedImages) {
-      if (generatedImage.image && generatedImage.image.imageBytes) {
-        let imgBytes = generatedImage.image.imageBytes;
-        const buffer = Buffer.from(imgBytes, "base64");
-        fs.writeFileSync(`imagen-${idx}.png`, buffer);
-        idx++;
-      } else {
-        console.error("generatedImage.image or imageBytes is undefined.");
+    let idx = 1;
+    if (response.generatedImages && Array.isArray(response.generatedImages)) {
+      for (const generatedImage of response.generatedImages) {
+        if (generatedImage.image && generatedImage.image.imageBytes) {
+          let imgBytes = generatedImage.image.imageBytes;
+          const buffer = Buffer.from(imgBytes, "base64");
+          fs.writeFileSync(`imagen-${idx}.png`, buffer);
+          idx++;
+        } else {
+          console.error("generatedImage.image or imageBytes is undefined.");
+        }
+      }
+    } else {
+      console.error("No generated images found in the response.");
+    }
+  }
+
+  async videoGenerate() {
+    let operation = await geminiAi.models.generateVideos({
+      model: "veo-2.0-generate-001",
+      prompt: "Panning wide shot of a calico kitten sleeping in the sunshine",
+      config: {
+        personGeneration: "dont_allow",
+        aspectRatio: "16:9",
+      },
+    });
+
+    while (!operation.done) {
+      await new Promise((resolve) => setTimeout(resolve, 10000));
+      operation = await geminiAi.operations.getVideosOperation({
+        operation: operation,
+      });
+    }
+
+    if (!operation.response?.generatedVideos) return;
+
+    for (const [
+      n,
+      generatedVideo,
+    ] of operation.response.generatedVideos.entries()) {
+      const resp = await fetch(
+        `${generatedVideo.video?.uri}&key=GOOGLE_API_KEY`
+      );
+
+      if (resp.body) {
+        const writer = createWriteStream(`video${n}.mp4`);
+
+        // Convert Web ReadableStream to Node.js stream and pipe
+        const nodeStream = Readable.fromWeb(resp.body as any); // cast if needed
+        nodeStream.pipe(writer);
       }
     }
-  } else {
-    console.error("No generated images found in the response.");
   }
-}
 }
 
 const geminiService = new GeminiService();

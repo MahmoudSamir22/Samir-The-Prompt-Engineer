@@ -47,6 +47,15 @@ class GeminiController {
       next(error);
     }
   }
+
+  async videoGenerate(req: Request, res: Response, next: NextFunction) {
+    try {
+      const data = await geminiService.videoGenerate();
+      response(res, 200, data);
+    } catch (error) {
+      next(error);
+    }
+  }
 }
 
 const geminiController = new GeminiController();
